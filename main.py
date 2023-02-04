@@ -8,8 +8,6 @@ import pandas as pd
 import numpy as np
 import urllib.request
 from selenium.webdriver import FirefoxOptions
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
 import streamlit as st
 import os
 headers = {
@@ -38,25 +36,6 @@ def installff():
     os.system('ln -s /home/appuser/venv/lib/python3.9/site-packages/seleniumbase/drivers/geckodriver /home/appuser/venv/bin/geckodriver')
 
 
-@st.experimental_singleton
-def launch_driver(headless=False, image=False):
-    options = webdriver.ChromeOptions()
-    if headless:
-        options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--ignore-certificate-errors')
-    options.add_argument('--allow-running-insecure-content')
-    options.add_argument('--disable-web-security')
-    options.add_argument('--disable-desktop-notifications')
-    options.add_argument("--disable-extensions")
-    options.add_argument('--lang=ja')
-    options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    if not image:
-        options.add_argument('--blink-settings=imagesEnabled=false')
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
-    return driver
-
-
 class Page:
     def __init__(self, group, name, category, target_const, amount, target_house, target, hpurl, tel, date):
         self.group = group
@@ -81,7 +60,6 @@ def collect_urls():
     opts = FirefoxOptions()
     opts.add_argument('--headless')
     driver = webdriver.Firefox(options=opts)
-    # driver = launch_driver(headless=True)
     driver.get(main_url)
     time.sleep(1)
     driver.execute_script('arguments[0].click();', driver.find_element(By.CSS_SELECTOR, 'input[value="3"]'))
@@ -96,12 +74,14 @@ def collect_urls():
     num_hits = int(num_hits.text)
     num_pages = int(np.ceil(num_hits/50))
     page_urls = [item.get_attribute('href') for item in driver.find_elements(By.CSS_SELECTOR, 'table.tbl-kekkalist td a')]
-    #! 2ページのみ
-    for page_num in range(1, 2):
+    status_text = st.empty()
+    progress_bar = st.progress(0)
+    for page_num in range(1, num_pages):
         driver.execute_script('arguments[0].click();', driver.find_element(By.CSS_SELECTOR, 'a[title="next page"]'))
         time.sleep(1)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table.tbl-kekkalist td a')))
         page_urls.extend([item.get_attribute('href') for item in driver.find_elements(By.CSS_SELECTOR, 'table.tbl-kekkalist td a')])
+        progress_bar.progress((page_num+1)/(num_pages-1))
     driver.quit()
     return page_urls
 
@@ -110,8 +90,7 @@ def scrape(page_urls):
     pages = []
     status_text = st.empty()
     progress_bar = st.progress(0)
-    #! 10件のみ
-    for i, page_url in enumerate(page_urls[:10]):
+    for i, page_url in enumerate(page_urls):
         bs = openbs(page_url)
         group = extract(bs, 'td.tbl-shosaittl-td1:contains("実施地方公共団体")+td')
         name = extract(bs, 'td.tbl-shosaittl-td1:contains("制度名（事業名）")+td')
@@ -127,7 +106,7 @@ def scrape(page_urls):
         tel = extract(bs, 'td.tbl-shosai-td1:contains("お問合せ先")+td')
         date = extract(bs, 'td.tbl-shosai-td1:contains("最終更新日")+td')
         pages.append(Page(group, name, category, target_const, amount, target_house, target, hpurl, tel, date))
-        progress_bar.progress((i+1)/10)
+        progress_bar.progress((i+1)/len(page_urls))
     df = pd.DataFrame([vars(item) for item in pages])
     df.columns = ['実施地方公共団体', '制度名（事業名）', '支援分類', '対象工事', '補助率等', '対象住宅', '発注者', '詳細ホームページ', 'お問合せ先', '最終更新日']
     return df
