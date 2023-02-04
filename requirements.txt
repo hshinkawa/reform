@@ -3,6 +3,6 @@ lxml
 pandas
 numpy
 webdriver-manager
-selenium
+seleniumbase
 streamlit
 xlsxwriter
