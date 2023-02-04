@@ -81,7 +81,7 @@ def collect_urls():
         time.sleep(1)
         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'table.tbl-kekkalist td a')))
         page_urls.extend([item.get_attribute('href') for item in driver.find_elements(By.CSS_SELECTOR, 'table.tbl-kekkalist td a')])
-        progress_bar.progress((page_num+1)/(num_pages-1))
+        progress_bar.progress((page_num)/(num_pages-1))
     driver.quit()
     return page_urls
 
