@@ -7,9 +7,9 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import numpy as np
 import urllib.request
-from selenium.webdriver import FirefoxOptions
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
+from webdriver_manager.firefox import GeckoDriverManager
 import streamlit as st
 import os
 headers = {
@@ -38,7 +38,6 @@ def installff():
     # os.system('ln -s /home/appuser/venv/lib/python3.9/site-packages/seleniumbase/drivers/geckodriver /home/appuser/venv/bin/geckodriver')
 
 
-@st.experimental_singleton
 def launch_driver(headless=False, image=False):
     options = webdriver.ChromeOptions()
     if headless:
@@ -77,10 +76,13 @@ class Page:
 
 def collect_urls():
     main_url = 'https://www.j-reform.com/reform-support/'
-    _ = installff()
-    opts = FirefoxOptions()
-    opts.add_argument('--headless')
-    driver = webdriver.Firefox(options=opts)
+    firefoxOptions = Options()
+    firefoxOptions.add_argument('--headless')
+    service = Service(GeckoDriverManager().install())
+    driver = webdriver.Firefox(
+        options=firefoxOptions,
+        service=service,
+    )
     # driver = launch_driver(headless=True)
     driver.get(main_url)
     time.sleep(1)
