@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 import urllib.request
 from webdriver_manager.chrome import ChromeDriverManager
-from tqdm import tqdm
+from selenium.webdriver.chrome.service import Service
 import streamlit as st
 headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0'
@@ -30,6 +30,7 @@ def extract(obj, css):
     return result
 
 
+@st.experimental_singleton
 def launch_driver(headless=False, image=False):
     options = webdriver.ChromeOptions()
     if headless:
@@ -44,7 +45,7 @@ def launch_driver(headless=False, image=False):
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
     if not image:
         options.add_argument('--blink-settings=imagesEnabled=false')
-    driver = webdriver.Chrome(ChromeDriverManager().install(),options=options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
     return driver
 
 
