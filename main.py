@@ -7,9 +7,11 @@ from selenium.webdriver.support import expected_conditions as EC
 import pandas as pd
 import numpy as np
 import urllib.request
+from selenium.webdriver import FirefoxOptions
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 import streamlit as st
+import os
 headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0'
         }
@@ -28,6 +30,12 @@ def extract(obj, css):
     else:
         result = ''
     return result
+
+
+@st.experimental_singleton
+def installff():
+    os.system('sbase install geckodriver')
+    os.system('ln -s /home/appuser/venv/lib/python3.7/site-packages/seleniumbase/drivers/geckodriver /home/appuser/venv/bin/geckodriver')
 
 
 @st.experimental_singleton
@@ -69,7 +77,11 @@ class Page:
 
 def collect_urls():
     main_url = 'https://www.j-reform.com/reform-support/'
-    driver = launch_driver(headless=True)
+    _ = installff()
+    opts = FirefoxOptions()
+    opts.add_argument('--headless')
+    driver = webdriver.Firefox(options=opts)
+    # driver = launch_driver(headless=True)
     driver.get(main_url)
     time.sleep(1)
     driver.execute_script('arguments[0].click();', driver.find_element(By.CSS_SELECTOR, 'input[value="3"]'))

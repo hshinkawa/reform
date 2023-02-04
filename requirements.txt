@@ -6,4 +6,3 @@ webdriver-manager
 selenium
 streamlit
 xlsxwriter
-seleniumbase
