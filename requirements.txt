@@ -1,8 +1,7 @@
+streamlit
 beautifulsoup4
 lxml
 pandas
 numpy
-webdriver-manager
 seleniumbase
-streamlit
 xlsxwriter
