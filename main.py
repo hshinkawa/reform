@@ -82,7 +82,10 @@ def scrape(page_urls):
     progress_bar = st.progress(0)
     df = pd.DataFrame(columns=['実施地方公共団体', '制度名（事業名）', '支援分類', '対象工事', '補助率等', '対象住宅', '発注者', '詳細ホ ームページ', 'お問合せ先', '最終更新日'])
     for i, page_url in enumerate(page_urls):
-        bs = openbs(page_url)
+        try:
+            bs = openbs(page_url)
+        except:
+            continue
         group = extract(bs, 'td.tbl-shosaittl-td1:contains("実施地方公共団体")+td')
         name = extract(bs, 'td.tbl-shosaittl-td1:contains("制度名（事業名）")+td')
         category = extract(bs, 'td.tbl-shosai-td1:contains("支援分類")+td')
