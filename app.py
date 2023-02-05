@@ -5,12 +5,12 @@ import pandas as pd
 import io
 
 
-@st.cache(suppress_st_warning=True, show_spinner=False)
+@st.cache(suppress_st_warning=True, show_spinner=False, max_entries=3, ttl=3600)
 def st_collect_urls():
     return collect_urls()
 
 
-@st.cache(suppress_st_warning=True, show_spinner=False)
+@st.cache(suppress_st_warning=True, show_spinner=False, max_entries=3, ttl=3600)
 def st_scrape(page_urls):
     return scrape(page_urls)
 
