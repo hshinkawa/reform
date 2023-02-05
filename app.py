@@ -18,6 +18,7 @@ def st_scrape(page_urls):
 st.title('支援制度検索')
 
 if st.button('検索開始'):
+    st.text('Loading...')
     page_urls = collect_urls()
     st.text('全{}件'.format(len(page_urls)))
     df = scrape(page_urls)

@@ -74,6 +74,8 @@ def collect_urls():
     num_hits = int(num_hits.text)
     num_pages = int(np.ceil(num_hits/50))
     page_urls = [item.get_attribute('href') for item in driver.find_elements(By.CSS_SELECTOR, 'table.tbl-kekkalist td a')]
+    st.text('Loaded!')
+    st.text('Getting URLs.')
     status_text = st.empty()
     progress_bar = st.progress(0)
     for page_num in range(1, num_pages):
@@ -88,6 +90,7 @@ def collect_urls():
 
 def scrape(page_urls):
     pages = []
+    st.text('Accessing each page.')
     status_text = st.empty()
     progress_bar = st.progress(0)
     for i, page_url in enumerate(page_urls):
