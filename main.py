@@ -85,7 +85,7 @@ def scrape(page_urls, start_idx=0):
             gc.collect()
     status_text = st.empty()
     progress_bar = st.progress(start_idx/len(page_urls))
-    for i, page_url in enumerate(page_urls[start_idx], start=start_idx):
+    for i, page_url in enumerate(page_urls[start_idx:], start=start_idx):
         bs = openbs(page_url)
         group = extract(bs, 'td.tbl-shosaittl-td1:contains("実施地方公共団体")+td')
         name = extract(bs, 'td.tbl-shosaittl-td1:contains("制度名（事業名）")+td')
