@@ -3,6 +3,8 @@ from main import collect_urls
 from main import scrape
 import pandas as pd
 import io
+from streamlit_autorefresh import st_autorefresh
+st_autorefresh(100*60*1000)
 
 
 @st.cache(suppress_st_warning=True, show_spinner=False, max_entries=3, ttl=3600)

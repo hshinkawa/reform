@@ -10,7 +10,8 @@ import urllib.request
 from selenium.webdriver import FirefoxOptions
 import streamlit as st
 import os
-import gc
+from streamlit_autorefresh import st_autorefresh
+st_autorefresh(90*60*1000)
 headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0'
         }
@@ -35,6 +36,24 @@ def extract(obj, css):
 def installff():
     os.system('sbase install geckodriver')
     os.system('ln -s /home/appuser/venv/lib/python3.9/site-packages/seleniumbase/drivers/geckodriver /home/appuser/venv/bin/geckodriver')
+
+
+class Page:
+    def __init__(self, group, name, category, target_const, amount, target_house, target, hpurl, tel, date):
+        self.group = group
+        self.name = name
+        self.category = category
+        self.target_const = target_const
+        self.amount = amount
+        self.target_house = target_house
+        self.target = target
+        self.hpurL = hpurl
+        self.tel = tel
+        self.date = date
+
+
+    def __repr__(self):
+        return self.name
 
 
 def collect_urls():
@@ -68,10 +87,6 @@ def collect_urls():
         page_urls.extend([item.get_attribute('href') for item in driver.find_elements(By.CSS_SELECTOR, 'table.tbl-kekkalist td a')])
         progress_bar.progress((page_num)/(num_pages-1))
     driver.quit()
-    del driver
-    gc.collect()
-    del status_text, progress_bar
-    gc.collect()
     return page_urls
 
 
@@ -80,12 +95,8 @@ def scrape(page_urls):
     st.text('Accessing each page.')
     status_text = st.empty()
     progress_bar = st.progress(0)
-    df = pd.DataFrame(columns=['実施地方公共団体', '制度名（事業名）', '支援分類', '対象工事', '補助率等', '対象住宅', '発注者', '詳細ホ ームページ', 'お問合せ先', '最終更新日'])
     for i, page_url in enumerate(page_urls):
-        try:
-            bs = openbs(page_url)
-        except:
-            continue
+        bs = openbs(page_url)
         group = extract(bs, 'td.tbl-shosaittl-td1:contains("実施地方公共団体")+td')
         name = extract(bs, 'td.tbl-shosaittl-td1:contains("制度名（事業名）")+td')
         category = extract(bs, 'td.tbl-shosai-td1:contains("支援分類")+td')
@@ -99,8 +110,8 @@ def scrape(page_urls):
             hpurl = ''
         tel = extract(bs, 'td.tbl-shosai-td1:contains("お問合せ先")+td')
         date = extract(bs, 'td.tbl-shosai-td1:contains("最終更新日")+td')
-        df = df.append(pd.Series([group, name, category, target_const, amount, target_house, target, hpurl, tel, date], index=df.columns), ignore_index=True)
+        pages.append(Page(group, name, category, target_const, amount, target_house, target, hpurl, tel, date))
         progress_bar.progress((i+1)/len(page_urls))
-    del status_text, progress_bar
-    gc.collect()
+    df = pd.DataFrame([vars(item) for item in pages])
+    df.columns = ['実施地方公共団体', '制度名（事業名）', '支援分類', '対象工事', '補助率等', '対象住宅', '発注者', '詳細ホームページ', 'お問合せ先', '最終更新日']
     return df
