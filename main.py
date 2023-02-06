@@ -9,8 +9,10 @@ import numpy as np
 import urllib.request
 from selenium.webdriver import FirefoxOptions
 import streamlit as st
+import gc
 import os
 from streamlit_autorefresh import st_autorefresh
+from csv import writer
 st_autorefresh(90*60*1000)
 headers = {
         'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0'
@@ -36,24 +38,6 @@ def extract(obj, css):
 def installff():
     os.system('sbase install geckodriver')
     os.system('ln -s /home/appuser/venv/lib/python3.9/site-packages/seleniumbase/drivers/geckodriver /home/appuser/venv/bin/geckodriver')
-
-
-class Page:
-    def __init__(self, group, name, category, target_const, amount, target_house, target, hpurl, tel, date):
-        self.group = group
-        self.name = name
-        self.category = category
-        self.target_const = target_const
-        self.amount = amount
-        self.target_house = target_house
-        self.target = target
-        self.hpurL = hpurl
-        self.tel = tel
-        self.date = date
-
-
-    def __repr__(self):
-        return self.name
 
 
 def collect_urls():
@@ -90,12 +74,18 @@ def collect_urls():
     return page_urls
 
 
-def scrape(page_urls):
+def scrape(page_urls, start_idx=0):
     pages = []
     st.text('Accessing each page.')
+    if start_idx==0:
+        with open('output.csv', 'w', newline='', encoding='utf-8') as f:
+            writer_obj = writer(f)
+            writer_obj.writerow(['実施地方公共団体', '制度名（事業名）', '支援分類', '対象工事', '補助率等', '対象住宅', '発注者', '詳細ホームページ', 'お問合せ先', '最終更新日'])
+            del writer_obj
+            gc.collect()
     status_text = st.empty()
-    progress_bar = st.progress(0)
-    for i, page_url in enumerate(page_urls):
+    progress_bar = st.progress(start_idx/len(page_urls))
+    for i, page_url in enumerate(page_urls[start_idx], start=start_idx):
         bs = openbs(page_url)
         group = extract(bs, 'td.tbl-shosaittl-td1:contains("実施地方公共団体")+td')
         name = extract(bs, 'td.tbl-shosaittl-td1:contains("制度名（事業名）")+td')
@@ -110,8 +100,10 @@ def scrape(page_urls):
             hpurl = ''
         tel = extract(bs, 'td.tbl-shosai-td1:contains("お問合せ先")+td')
         date = extract(bs, 'td.tbl-shosai-td1:contains("最終更新日")+td')
-        pages.append(Page(group, name, category, target_const, amount, target_house, target, hpurl, tel, date))
+        with open('output.csv', 'a+', newline='', encoding='utf-8') as f:
+            writer_obj = writer(f)
+            writer_obj.writerow([group, name, category, target_const, amount, target_house, target, hpurl, tel, date])
+            del writer_obj
+            gc.collect()
         progress_bar.progress((i+1)/len(page_urls))
-    df = pd.DataFrame([vars(item) for item in pages])
-    df.columns = ['実施地方公共団体', '制度名（事業名）', '支援分類', '対象工事', '補助率等', '対象住宅', '発注者', '詳細ホームページ', 'お問合せ先', '最終更新日']
-    return df
+    return True
