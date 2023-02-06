@@ -23,6 +23,13 @@ def save_urls(page_urls):
         pickle.dump(page_urls, f)
 
 
+@st.cache(suppress_st_warning=True, show_spinner=False, max_entries=3, ttl=3600)
+def load_urls():
+    with open('urls.pickle', 'rb') as f:
+        urls = pickle.load(f)
+    return urls
+
+
 st.title('支援制度検索')
 
 if st.button('新規検索開始', key='new'):
@@ -30,8 +37,6 @@ if st.button('新規検索開始', key='new'):
     page_urls = collect_urls()
     save_urls(page_urls)
     num_pages = len(page_urls)
-    with open('num.txt', 'w') as f:
-        f.write(num_pages)
     st.text('全{}件'.format(num_pages))
     end_flag = scrape(page_urls)
     if end_flag:
@@ -45,8 +50,8 @@ if st.button('新規検索開始', key='new'):
 if st.button('前回中断したところから開始', key='resume'):
     st.text('Resuming...')
     df = pd.read_csv('output.csv')
-    with open('num.txt', 'r') as f:
-        num_pages = int(f.read())
+    page_urls = load_urls()
+    num_pages = len(page_urls)
     st.text('全{}件'.format(num_pages))
     df = pd.read_csv('output.csv')
     num_finished = len(df)
